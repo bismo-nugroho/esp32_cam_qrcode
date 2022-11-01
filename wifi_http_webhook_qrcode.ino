@@ -14,7 +14,7 @@
 
 
 #define WEBHOOK_URL "https//your-url:8080/endpoint"
-#define DOOR_RELAY_PIN 12
+#define DOOR_RELAY_PIN 2
 #define FLASH_GPIO_NUM 4
 
 #define TRIG_PIN 13 // ESP32 pin GIOP23 connected to Ultrasonic Sensor's TRIG pin
@@ -36,12 +36,16 @@ long duration;
 float distanceCm;
 float distanceInch;
 
+int countdown = 0;
 
-#define BUZZER_PIN  12 // ESP32 pin GIOP18 connected to piezo buzzer
+
+#define BUZZER_PIN  2 // ESP32 pin GIOP18 connected to piezo buzzer
 
 int count = 0;
 bool camoff = true;
 bool lcamoff = false;
+
+bool isScan = false;
 
 
 int playing = 0;
@@ -173,6 +177,32 @@ int ledCHannel = 2;
 int res = 8;
 const int ledPin = 4;
 int brightness;
+
+
+
+
+
+
+void WiFiStationConnected(WiFiEvent_t event, WiFiEventInfo_t info) {
+  Serial.println("Connected to APs successfully!");
+}
+
+void WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info) {
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+}
+
+void WiFiStationDisconnected(WiFiEvent_t event, WiFiEventInfo_t info) {
+  Serial.println("Disconnected from WiFi access point");
+  Serial.print("WiFi lost connection. Reason: ");
+  Serial.println(info.disconnected.reason);
+  Serial.println("Trying to Reconnect");
+  //WiFi.begin(ssid, password);
+}
+
+
+
 void setup()
 {
   Serial.begin(115200);
@@ -221,9 +251,33 @@ void setup()
   // digitalWrite (BUZZER_PIN, LOW); //turn buzzer on
   noTone();
 
+  WiFi.disconnect(true);
+
+  WiFi.onEvent(WiFiStationConnected, SYSTEM_EVENT_STA_CONNECTED);
+  WiFi.onEvent(WiFiGotIP, SYSTEM_EVENT_STA_GOT_IP);
+  WiFi.onEvent(WiFiStationDisconnected, SYSTEM_EVENT_STA_DISCONNECTED);
   //  display.flipScreenVertically();
 
 
+}
+
+
+int counter = -1;
+
+void showSuccess() {
+
+  isScan = true;
+  countdown = 5;
+  display.clear();
+  display.drawStringMaxWidth(0, 0, 128, "Absen Berhasil");
+  display.drawStringMaxWidth(0, 15, 128, (const char *) qrCodeData.payload);
+  //display.drawString(0,0, (const char *) qrCodeData.payload);
+  doubleFlash();
+  //display.drawString(0,0, "Stand By....");
+
+  //display.clear();
+  //display.drawString(0, 0, "Initializing...: ");
+  //display.display();
 }
 
 void doubleFlash() {
@@ -290,7 +344,28 @@ void loop()
   if (isConnected != connected)
   {
     isConnected = connected;
+
+    if ( isConnected ) {
+      countdown = 3;
+    }
   }
+
+
+
+  if (countdown >= 0)
+    countdown--;
+
+
+  if ( countdown == 0) {
+
+    //if ( !isScan){
+    display.clear();
+    display.drawString(0, 0, "Ready.... ");
+    display.display();
+    // }
+
+  }
+
   Serial.println("loops=" + String(count));
   if (reader.receiveQrCode(&qrCodeData, 100))
   {
@@ -298,11 +373,7 @@ void loop()
     //display.drawString(0,0, "QR Code Found : ");
     if (qrCodeData.valid)
     {
-      display.clear();
-      display.drawStringMaxWidth(0, 0, 128, (const char *) qrCodeData.payload);
-      //display.drawString(0,0, (const char *) qrCodeData.payload);
-      doubleFlash();
-      //display.drawString(0,0, "Stand By....");
+      showSuccess();
 
       Serial.print("Payload: ");
       Serial.println((const char *)qrCodeData.payload);
