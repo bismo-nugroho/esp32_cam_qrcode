@@ -5,8 +5,14 @@
 #include <Wire.h>
 #include "SSD1306.h"
 
-#define WIFI_SSID "-MobHotHome-"
-#define WIFI_PASSWORD "pisanggoreng"
+#define WIFI_SSID0 "-MobHotHome-"
+#define WIFI_PASSWORD0 "pisanggoreng"
+#define WIFI_SSID1 "-MobHot-"
+#define WIFI_PASSWORD1 "pisanggoreng"
+#define WIFI_SSID2 "-MobHotHome-"
+#define WIFI_PASSWORD2 "pisanggoreng"
+
+
 #define WEBHOOK_URL "https//your-url:8080/endpoint"
 #define DOOR_RELAY_PIN 12
 #define FLASH_GPIO_NUM 4
@@ -16,8 +22,11 @@
 
 float duration_us, distance_cm;
 
-  
-SSD1306 display(0x3c, 15, 13,GEOMETRY_128_32);
+
+int passIdx = 0;
+
+
+SSD1306 display(0x3c, 15, 13, GEOMETRY_128_32);
 
 //define sound speed in cm/uS
 #define SOUND_SPEED 0.034
@@ -68,10 +77,11 @@ bool connectWifi2()
     return true;
   }
 
+
   WiFi.begin("-MobHot-", "pisanggoreng");
   int maxRetries = 10;
   display.clear();
-  display.drawString(0,0, "Connecting to Wifi...");
+  display.drawString(0, 0, "Connecting to Wifi...");
   display.display();
   Serial.println("Wifi Connecting");
   while (WiFi.status() != WL_CONNECTED)
@@ -80,14 +90,14 @@ bool connectWifi2()
     Serial.print(".");
     //maxRetries--;
     //if (maxRetries <= 0)
-   // {
-      return false;
-   // }
+    // {
+    return false;
+    // }
   }
   Serial.println("");
   Serial.println("WiFi connected");
-     display.clear();
-    display.drawString(0,0, "Wifi Connected...");
+  display.clear();
+  display.drawString(0, 0, "Wifi Connected...");
   display.display();
   return true;
 }
@@ -99,27 +109,38 @@ bool connectWifi()
     return true;
   }
 
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  if (passIdx == 0)
+    WiFi.begin(WIFI_SSID0, WIFI_PASSWORD0);
+  else if (passIdx == 1)
+    WiFi.begin(WIFI_SSID1, WIFI_PASSWORD1);
+
+
   int maxRetries = 10;
-      display.drawString(0,0, "Connecting to Wifi...");
+  display.clear();
+  display.drawString(0, 0, "Connecting to Wifi " + String(passIdx));
   display.display();
   Serial.println("Wifi Connecting");
   while (WiFi.status() != WL_CONNECTED)
   {
     delay(500);
     Serial.print(".");
-   //    return  connectWifi2();
+    //    return  connectWifi2();
     maxRetries--;
     if (maxRetries <= 0)
     {
+
+      if (passIdx == 0)
+        passIdx = 1;
+      else
+        passIdx = 0;
 
       return false;
     }
   }
   Serial.println("");
   Serial.println("WiFi connected");
-     display.clear();
-    display.drawString(0,0, "Wifi Connected...");
+  display.clear();
+  display.drawString(0, 0, "Wifi Connected...");
   display.display();
   return true;
 }
@@ -158,10 +179,10 @@ void setup()
   Serial.println();
 
   display.init();
-   display.setFont(ArialMT_Plain_16);
+  display.setFont(ArialMT_Plain_16);
 
-   display.clear();
-  display.drawString(0,0, "Initializing...: ");
+  display.clear();
+  display.drawString(0, 0, "Initializing...: ");
   display.display();
   // configure the trigger pin to output mode
   //pinMode(TRIG_PIN, OUTPUT);
@@ -169,7 +190,7 @@ void setup()
   //pinMode(ECHO_PIN, INPUT);
   //    pinMode (BUZZER_PIN, OUTPUT);
 
- // pinMode(DOOR_RELAY_PIN, OUTPUT);
+  // pinMode(DOOR_RELAY_PIN, OUTPUT);
   //closeDoor();
 
   reader.setup();
@@ -202,7 +223,7 @@ void setup()
 
   //  display.flipScreenVertically();
 
-  
+
 }
 
 void doubleFlash() {
@@ -228,42 +249,42 @@ void doubleFlash() {
 void loop()
 {
 
-//display.clear();
- // display.drawString(0,16, "Counter: " + String(count));
-  
+  //display.clear();
+  // display.drawString(0,16, "Counter: " + String(count));
 
- // Clears the trigPin
- // digitalWrite(TRIG_PIN, LOW);
-//  delayMicroseconds(2);
+
+  // Clears the trigPin
+  // digitalWrite(TRIG_PIN, LOW);
+  //  delayMicroseconds(2);
   // Sets the trigPin on HIGH state for 10 micro seconds
- // digitalWrite(TRIG_PIN, HIGH);
- // delayMicroseconds(10);
- // digitalWrite(TRIG_PIN, LOW);
-  
+  // digitalWrite(TRIG_PIN, HIGH);
+  // delayMicroseconds(10);
+  // digitalWrite(TRIG_PIN, LOW);
+
   // Reads the echoPin, returns the sound wave travel time in microseconds
- // duration = pulseIn(ECHO_PIN, HIGH);
-  
+  // duration = pulseIn(ECHO_PIN, HIGH);
+
   // Calculate the distance
- // distanceCm = duration * SOUND_SPEED/2;
+  // distanceCm = duration * SOUND_SPEED/2;
 
 
-  
 
-//  digitalWrite(TRIG_PIN, HIGH);
- // delayMicroseconds(10);
-//  digitalWrite(TRIG_PIN, LOW);
+
+  //  digitalWrite(TRIG_PIN, HIGH);
+  // delayMicroseconds(10);
+  //  digitalWrite(TRIG_PIN, LOW);
 
   // measure duration of pulse from ECHO pin
- // duration_us = pulseIn(ECHO_PIN, HIGH);
+  // duration_us = pulseIn(ECHO_PIN, HIGH);
 
 
-    distance_cm = 0.017 * duration_us;
+  distance_cm = 0.017 * duration_us;
 
   // print the value to Serial Monitor
- // Serial.print("distance: ");
- // Serial.print(distanceCm);
-//  Serial.println(" cm");
-  
+  // Serial.print("distance: ");
+  // Serial.print(distanceCm);
+  //  Serial.println(" cm");
+
   //ledcWrite(ledCHannel, brightness);
   bool connected = connectWifi();
   if (isConnected != connected)
@@ -274,11 +295,11 @@ void loop()
   if (reader.receiveQrCode(&qrCodeData, 100))
   {
     //Serial.println("Found QRCode");
-     //display.drawString(0,0, "QR Code Found : ");
+    //display.drawString(0,0, "QR Code Found : ");
     if (qrCodeData.valid)
     {
-     display.clear();
-       display.drawStringMaxWidth(0, 0, 128,(const char *) qrCodeData.payload);
+      display.clear();
+      display.drawStringMaxWidth(0, 0, 128, (const char *) qrCodeData.payload);
       //display.drawString(0,0, (const char *) qrCodeData.payload);
       doubleFlash();
       //display.drawString(0,0, "Stand By....");
@@ -294,7 +315,7 @@ void loop()
       Serial.println((const char *)qrCodeData.payload);
     }
   }
-    display.display();
+  display.display();
   delay(300);
   count++;
 
