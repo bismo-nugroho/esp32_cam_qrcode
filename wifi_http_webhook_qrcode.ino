@@ -196,7 +196,7 @@ void WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info) {
 void WiFiStationDisconnected(WiFiEvent_t event, WiFiEventInfo_t info) {
   Serial.println("Disconnected from WiFi access point");
   Serial.print("WiFi lost connection. Reason: ");
-  Serial.println(info.disconnected.reason);
+  Serial.println("info.disconnected.reason");
   Serial.println("Trying to Reconnect");
   //WiFi.begin(ssid, password);
 }
@@ -252,12 +252,12 @@ void setup()
   noTone();
 
   WiFi.disconnect(true);
-
+/*
   WiFi.onEvent(WiFiStationConnected, SYSTEM_EVENT_STA_CONNECTED);
   WiFi.onEvent(WiFiGotIP, SYSTEM_EVENT_STA_GOT_IP);
   WiFi.onEvent(WiFiStationDisconnected, SYSTEM_EVENT_STA_DISCONNECTED);
   //  display.flipScreenVertically();
-
+*/
 
 }
 
