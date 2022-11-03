@@ -36,13 +36,17 @@ bool configstat = true;
 
 
 
+double idle_count = 0;
+double timertick = 0;
+
 String message = "";
 //JSONVar sliderValues;
 
 
 #define DOOR_RELAY_PIN 2
 #define FLASH_GPIO_NUM 4
-
+#define PIR_PIN 12
+#define IDLE_ACT 10000
 
 ///AsyncWebServer server(80);
 // Create a WebSocket object
@@ -435,6 +439,8 @@ void setup()
     */
   } else {
 
+    pinMode(PIR_PIN, INPUT);
+
     // configure the trigger pin to output mode
     //pinMode(TRIG_PIN, OUTPUT);
     // configure the echo pin to input mode
@@ -501,7 +507,7 @@ void showSuccess() {
 
   //display.clear();
   //display.drawString(0, 0, "Initializing...: ");
-  //display.display();
+  display.display();
 }
 
 void doubleFlash() {
@@ -524,12 +530,34 @@ void doubleFlash() {
 
 }
 
+void triggerAct() {
+  if (readerstat)
+    idle_count = millis();
+
+
+
+  if (!readerstat ) {
+    idle_count = millis();
+    lcamoff = !camoff;
+    readerstat = true;
+  }
+}
+
 void loop()
 {
+
+
 
   //display.clear();
   // display.drawString(0,16, "Counter: " + String(count));
 
+  if (digitalRead(PIR_PIN) == HIGH) {
+    Serial.println("Movement detected.");
+    triggerAct();
+
+  } else {
+    Serial.println("Did not detect movement.");
+  }
 
   // Clears the trigPin
   // digitalWrite(TRIG_PIN, LOW);
@@ -580,12 +608,13 @@ void loop()
       countdown--;
 
 
-    if ( countdown == 0) {
+    if ( countdown == 0 && readerstat) {
 
       //if ( !isScan){
       display.clear();
       display.drawString(0, 0, "Ready.... ");
       display.display();
+      isScan = false;
       // }
 
     }
@@ -593,6 +622,7 @@ void loop()
     Serial.println("loops=" + String(count));
     if (reader.receiveQrCode(&qrCodeData, 100))
     {
+      triggerAct();
       //Serial.println("Found QRCode");
       //display.drawString(0,0, "QR Code Found : ");
       if (qrCodeData.valid)
@@ -637,9 +667,26 @@ void loop()
     }///
     //ledcWrite(ledCHannel, brightness);
 
+    if ( isScan == false  && millis() - idle_count > IDLE_ACT ) {
+      readerstat = false;
+      brightness = 0;
+      ledcWrite(ledCHannel, brightness);
+      lcamoff = !camoff;
+      display.clear();
+      display.drawString(0, 0, "");
+      display.display();
+
+      esp_sleep_enable_ext0_wakeup(GPIO_NUM_12, 1);
+
+      Serial.println("Going to sleep now");
+      esp_deep_sleep_start();
+
+    }
+
   } else {
+
     //server.handleClient();
-    delay(2);
+    delay(200);
   }
 
 }
