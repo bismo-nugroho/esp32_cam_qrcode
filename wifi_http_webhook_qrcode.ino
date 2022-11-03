@@ -6,9 +6,9 @@
 #include "SSD1306.h"
 #include <Preferences.h>
 
-#include <WebServer.h>
-#include "SPIFFS.h"
-#include <Arduino_JSON.h>
+//#include <WebServer.h>
+//#include "SPIFFS.h"
+//#include <Arduino_JSON.h>
 
 Preferences preferences;
 
@@ -25,19 +25,19 @@ String secret_key = "ABSNASU$##^$#@^%#^%#&$&$*&$*&";
 String wifi_ssid = "QRSYSTEM-";// + String(chip_id);
 String wifi_password = "QRReaderSystem";// + String(chip_id);;
 
-bool readerstat = false;
+bool readerstat = true;
 
 bool configstat = true;
 
-IPAddress local_ip(192, 168, 123, 4); //ip address untuk akses ESP32
-IPAddress gateway(192, 168, 123, 1); //gateway
-IPAddress subnet(255, 255, 255, 0); //subnet
-WebServer server(80);  // port untuk akses HTTP
+//IPAddress local_ip(192, 168, 123, 4); //ip address untuk akses ESP32
+//IPAddress gateway(192, 168, 123, 1); //gateway
+//IPAddress subnet(255, 255, 255, 0); //subnet
+//WebServer server(80);  // port untuk akses HTTP
 
 
 
 String message = "";
-JSONVar sliderValues;
+//JSONVar sliderValues;
 
 
 #define DOOR_RELAY_PIN 2
@@ -76,8 +76,8 @@ bool isScan = false;
 
 int playing = 0;
 
-
-String getSliderValues() {
+/*
+  String getSliderValues() {
 
   //sliderValues["sliderValue1"] = String(sliderValue1);
   //sliderValues["sliderValue2"] = String(sliderValue2);
@@ -94,8 +94,8 @@ String getSliderValues() {
 
   String jsonString = JSON.stringify(sliderValues);
   return jsonString;
-}
-
+  }
+*/
 /*
 
   void notifyClients(String sliderValues) {
@@ -161,18 +161,18 @@ String getSliderValues() {
   }
 
 */
-
-// Initialize SPIFFS
-void initFS() {
+/*
+  // Initialize SPIFFS
+  void initFS() {
   if (!SPIFFS.begin()) {
     Serial.println("An error has occurred while mounting SPIFFS");
   }
   else {
     Serial.println("SPIFFS mounted successfully");
   }
-}
+  }
 
-
+*/
 
 void tone(byte pin, int freq) {
   ledcSetup(3, 2000, 8); // setup beeper
@@ -355,7 +355,7 @@ void getPref() {
   webhook_url = preferences.getString("webhook_url", webhook_url);
   secret_key = preferences.getString("secret_key", secret_key);
 
-
+  configstat = false;
 }
 
 
@@ -366,8 +366,6 @@ void setup()
   Serial.println();
 
   preferences.begin("my-app", false);
-
-  IPAddress myIP;
 
   getPref();
 
@@ -380,61 +378,61 @@ void setup()
 
 
   if (configstat) {
+    /*
+        snprintf(chip_id, 15, "%04X", (uint16_t)(ESP.getEfuseMac() >> 32 ) );
+        String hostname = "esp32cam" + String(chip_id);
 
-    snprintf(chip_id, 15, "%04X", (uint16_t)(ESP.getEfuseMac() >> 32 ) );
-    String hostname = "esp32cam" + String(chip_id);
+        display.clear();
+        display.setTextAlignment(TEXT_ALIGN_CENTER);
+        display.drawString(64, 0, "Config Mode" );
+        display.drawString(64, 16, "ID:" + String(chip_id) );
+        display.display();
 
-    display.clear();
-    display.setTextAlignment(TEXT_ALIGN_CENTER);
-    display.drawString(64, 0, "Config Mode" );
-    display.drawString(64, 16, "ID:" + String(chip_id) );
-    display.display();
-
-    wifi_ssid = "QRSYSTEM" + String(chip_id);
-    wifi_password = "QRReaderSystem" + String(chip_id);
-
-
-    WiFi.disconnect(true);
-    WiFi.mode(WIFI_AP);
-
-    WiFi.softAP(wifi_ssid.c_str(), wifi_password.c_str());
-    WiFi.softAPConfig(local_ip, gateway, subnet);
-    Serial.println("Terhubung ke Akses point");
-    //server.on("/", handle_root);
+        wifi_ssid = "QRSYSTEM" + String(chip_id);
+        wifi_password = "QRReaderSystem" + String(chip_id);
 
 
-    Serial.println("Start AP " + wifi_ssid);
-    Serial.println("Start Password " + wifi_password);
-    // Serial.println("Start AP IP "+myIP);
+        WiFi.disconnect(true);
+        WiFi.mode(WIFI_AP);
+
+        WiFi.softAP(wifi_ssid.c_str(), wifi_password.c_str());
+        WiFi.softAPConfig(local_ip, gateway, subnet);
+        Serial.println("Terhubung ke Akses point");
+        //server.on("/", handle_root);
+
+
+        Serial.println("Start AP " + wifi_ssid);
+        Serial.println("Start Password " + wifi_password);
+        // Serial.println("Start AP IP "+myIP);
 
 
 
-    delay(1000);
+        delay(1000);
 
-    display.clear();
-    display.setTextAlignment(TEXT_ALIGN_CENTER);
-    display.drawString(64, 0, wifi_ssid );
-    display.drawString(64, 16, "P:" + wifi_password );
-    display.display();
+        display.clear();
+        display.setTextAlignment(TEXT_ALIGN_CENTER);
+        display.drawString(64, 0, wifi_ssid );
+        display.drawString(64, 16, "P:" + wifi_password );
+        display.display();
 
-    //initWebSocket();
-
-
-    // Web Server Root URL
-    //server.on("/", HTTP_GET, [](AsyncWebServerRequest * request) {
-     // request->send(SPIFFS, "/index.html", "text/html");
-   // });
-
-    //server.on("/", []() {
-    //server.send(200,SPIFFS, "/index.html", "text/html")
-  //});
-
-    server.serveStatic("/", SPIFFS, "/");
-
-    // Start server
-    server.begin();
+        //initWebSocket();
 
 
+        // Web Server Root URL
+        //server.on("/", HTTP_GET, [](AsyncWebServerRequest * request) {
+         // request->send(SPIFFS, "/index.html", "text/html");
+       // });
+
+        //server.on("/", []() {
+        //server.send(200,SPIFFS, "/index.html", "text/html")
+      //});
+
+        server.serveStatic("/", SPIFFS, "/");
+
+        // Start server
+        server.begin();
+
+    */
   } else {
 
     // configure the trigger pin to output mode
@@ -640,7 +638,7 @@ void loop()
     //ledcWrite(ledCHannel, brightness);
 
   } else {
-    server.handleClient();
+    //server.handleClient();
     delay(2);
   }
 
